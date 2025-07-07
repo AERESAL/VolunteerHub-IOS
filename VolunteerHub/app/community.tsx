@@ -1,13 +1,13 @@
 import { Text, View, StyleSheet, useColorScheme } from "react-native";
 
-export default function HomeScreen() {
+export default function CommunityScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      <Text style={[styles.title, isDark && styles.titleDark]}>Welcome to VolunteerHub</Text>
-      <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>Home</Text>
+      <Text style={[styles.title, isDark && styles.titleDark]}>Community</Text>
+      <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>Connect with fellow volunteers and organizations</Text>
     </View>
   );
 }
@@ -32,11 +32,12 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#666",
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
   subtitleDark: {
     color: "#A1A1A6",
   },
 });
-

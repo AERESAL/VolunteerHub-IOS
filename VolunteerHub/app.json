@@ -25,8 +25,17 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-bottom-tabs",
       [
         "expo-splash-screen",
+        [
+       "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
@@ -46,3 +55,5 @@
     }
   }
 }
+
+
