@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   Dimensions,
   ImageBackground,
+  ScrollView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -16,6 +18,8 @@ const { width, height } = Dimensions.get('window');
 export default function WelcomeScreen() {
   const router = useRouter();
 
+  console.log('Welcome screen is rendering');
+
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
@@ -23,54 +27,56 @@ export default function WelcomeScreen() {
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <View style={styles.overlay}>
-          <View style={styles.content}>
+        {/* Grayscale overlay */}
+        <View style={styles.grayscaleOverlay} />
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          scrollEnabled={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+        >
+        <View style={styles.content}>
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <View style={styles.logoContainer}>
-              <Ionicons name="heart" size={60} color="#fff" />
+              <Image 
+                source={require('../assets/images/Black-Plain.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.title}>VolunteerHub</Text>
             <Text style={styles.subtitle}>
-              Connect with causes that matter to you
+              Built by highschoolers for highschoolers
             </Text>
           </View>
 
-          {/* Features Section */}
-          <View style={styles.featuresSection}>
-            <View style={styles.feature}>
-              <Ionicons name="people" size={24} color="#fff" />
-              <Text style={styles.featureText}>Join a community of volunteers</Text>
-            </View>
-            <View style={styles.feature}>
-              <Ionicons name="search" size={24} color="#fff" />
-              <Text style={styles.featureText}>Find opportunities near you</Text>
-            </View>
-            <View style={styles.feature}>
-              <Ionicons name="trophy" size={24} color="#fff" />
-              <Text style={styles.featureText}>Make a meaningful impact</Text>
-            </View>
-          </View>
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={styles.primaryButton}
-              onPress={() => router.push('/auth')}
+              onPress={() => {
+                console.log('Get Started pressed');
+                router.push('/auth');
+              }}
             >
               <Text style={styles.primaryButtonText}>Get Started</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.secondaryButton}
-              onPress={() => router.push('/auth')}
+              onPress={() => {
+                console.log('Login pressed');
+                router.push('/auth');
+              }}
             >
               <Text style={styles.secondaryButtonText}>I already have an account</Text>
             </TouchableOpacity>
           </View>
         </View>
-        </View>
-      </ImageBackground>
+        </ScrollView>
+    </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -81,62 +87,55 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
-  overlay: {
+  grayscaleOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(128, 128, 128, 0.7)',
+    mixBlendMode: 'multiply',
+  },
+  scrollView: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dark overlay to make text readable
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    justifyContent: 'space-between',
-    paddingTop: height * 0.1,
+    paddingTop: 60,
     paddingBottom: 40,
   },
   heroSection: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 40,
   },
   logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    justifyContent: 'center',
+    width: '100%',
+    backgroundColor: '#000',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
     alignItems: 'center',
-    marginBottom: 30,
+    justifyContent: 'center',
   },
-  title: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 15,
-    textAlign: 'center',
+  logo: {
+    width: '100%',
+    height: 100,
+    opacity: 1,
   },
   subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  featuresSection: {
-    marginBottom: 40,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  featureText: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginLeft: 15,
-    flex: 1,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 20,
+    marginBottom: 300,
   },
   buttonContainer: {
     width: '100%',
