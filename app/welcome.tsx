@@ -5,15 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Dimensions,
   ImageBackground,
   ScrollView,
   Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-const { width, height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -54,21 +51,21 @@ export default function WelcomeScreen() {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.primaryButton}
               onPress={() => {
                 console.log('Get Started pressed');
-                router.push('/auth');
+                router.push('/auth?mode=signup');
               }}
             >
               <Text style={styles.primaryButtonText}>Get Started</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.secondaryButton}
               onPress={() => {
                 console.log('Login pressed');
-                router.push('/auth');
+                router.push('/auth?mode=login');
               }}
             >
               <Text style={styles.secondaryButtonText}>I already have an account</Text>
