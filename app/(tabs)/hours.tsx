@@ -1,19 +1,19 @@
 import React from 'react';
 import { SafeAreaView, View, Text, StyleSheet, FlatList } from 'react-native';
 
-const signatures = [
+const hours = [
   { id: '1', name: 'Volunteer Agreement' },
   { id: '2', name: 'Parental Consent' },
   { id: '3', name: 'Event Waiver' },
 ];
 
-export default function SignaturesScreen() {
+export default function HoursScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Signatures</Text>
+        <Text style={styles.title}>Hours</Text>
         <FlatList
-          data={signatures}
+          data={hours}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.row}>
@@ -33,3 +33,6 @@ const styles = StyleSheet.create({
   row: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
   rowText: { fontSize: 16 },
 });
+
+
+

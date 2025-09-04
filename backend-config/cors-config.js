@@ -32,26 +32,27 @@ const corsOptions = {
   optionsSuccessStatus: 200, // Some legacy browsers choke on 204
 };
 
-// Apply CORS middleware
-app.use(cors(corsOptions));
+// Helper to attach CORS configuration to an Express `app` instance.
+// Usage in your server file:
+// const { applyCors } = require('./backend-config/cors-config');
+// applyCors(app);
+function applyCors(app) {
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
 
-// Handle preflight OPTIONS requests
-app.options('*', cors(corsOptions));
+  // Additional middleware for mobile compatibility
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
 
-// Additional middleware for mobile compatibility
-app.use((req, res, next) => {
-  // Allow requests from Expo and React Native
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
+}
 
-module.exports = corsOptions;
+module.exports = { corsOptions, applyCors };

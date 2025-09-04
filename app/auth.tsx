@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ImageBackground,
+  Image,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +29,9 @@ export default function AuthScreen() {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(1)).current;
 
   const handleAuth = () => {
     if (!email || !password) {
@@ -55,19 +61,35 @@ export default function AuthScreen() {
   };
 
   const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setFullName('');
+    // Fade out, switch mode, then fade in for a smooth transition.
+    // Animate out form and slightly scale header, then switch mode and animate back in.
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 160, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 8, duration: 160, useNativeDriver: true }),
+      Animated.timing(logoScale, { toValue: 0.98, duration: 160, useNativeDriver: true }),
+    ]).start(() => {
+      setIsLogin(!isLogin);
+      // clear fields after mode switch to avoid abrupt changes while visible
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setFullName('');
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 220, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, friction: 6, useNativeDriver: true }),
+      ]).start();
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.gradient}
+      <ImageBackground
+        source={require('../assets/images/background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
       >
+        <View style={styles.grayscaleOverlay} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -77,34 +99,38 @@ export default function AuthScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Ionicons name="heart" size={40} color="#fff" />
-              </View>
+            <Animated.View style={[styles.header, { transform: [{ translateY }] }] }>
+              <Animated.View style={[styles.logoContainer, { transform: [{ scale: logoScale }] }]}>
+                <Image
+                  source={require('../assets/images/Black-Plain.png')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </Animated.View>
               <Text style={styles.title}>VolunteerHub</Text>
               <Text style={styles.subtitle}>
                 {isLogin ? 'Welcome back!' : 'Join our community'}
               </Text>
-            </View>
+            </Animated.View>
 
             {/* Form */}
-            <View style={styles.formContainer}>
+            <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                    <Ionicons name="person-outline" size={20} color="rgba(255,255,255,0.9)" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Full Name"
                     value={fullName}
                     onChangeText={setFullName}
                     autoCapitalize="words"
-                    placeholderTextColor="#999"
+                      placeholderTextColor="rgba(255,255,255,0.7)"
                   />
                 </View>
               )}
 
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+                <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.9)" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
@@ -112,19 +138,19 @@ export default function AuthScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
                 />
               </View>
 
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.9)" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
-                  placeholderTextColor="#999"
+                  placeholderTextColor="rgba(255,255,255,0.7)"
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
@@ -133,21 +159,21 @@ export default function AuthScreen() {
                   <Ionicons
                     name={showPassword ? "eye-outline" : "eye-off-outline"}
                     size={20}
-                    color="#666"
+                    color="rgba(255,255,255,0.9)"
                   />
                 </TouchableOpacity>
               </View>
 
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                  <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.9)" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Confirm Password"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
-                    placeholderTextColor="#999"
+                    placeholderTextColor="rgba(255,255,255,0.7)"
                   />
                   <TouchableOpacity
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -156,7 +182,7 @@ export default function AuthScreen() {
                     <Ionicons
                       name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
                       size={20}
-                      color="#666"
+                      color="rgba(255,255,255,0.9)"
                     />
                   </TouchableOpacity>
                 </View>
@@ -186,12 +212,12 @@ export default function AuthScreen() {
               </View>
 
               <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-google" size={20} color="#4285F4" />
+                <Ionicons name="logo-google" size={20} color="#fff" />
                 <Text style={styles.socialButtonText}>Continue with Google</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-apple" size={20} color="#000" />
+                <Ionicons name="logo-apple" size={20} color="#fff" />
                 <Text style={styles.socialButtonText}>Continue with Apple</Text>
               </TouchableOpacity>
 
@@ -205,10 +231,10 @@ export default function AuthScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+  </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -220,6 +246,20 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  grayscaleOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(128, 128, 128, 0.7)',
+    mixBlendMode: 'multiply',
+  },
   keyboardView: {
     flex: 1,
   },
@@ -230,16 +270,23 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+    paddingTop: 28,
+    paddingHorizontal: 12,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
+    backgroundColor: '#000',
+    borderRadius: 15,
+    padding: 20,
     marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: '100%',
+    height: 100,
+    opacity: 1,
   },
   title: {
     fontSize: 32,
@@ -249,29 +296,31 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   formContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 20,
     padding: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.12)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4.65,
-    elevation: 8,
+    elevation: 6,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e1e1e1',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     marginBottom: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'transparent',
     paddingHorizontal: 15,
     height: 50,
   },
@@ -281,7 +330,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#fff',
   },
   eyeIcon: {
     padding: 5,
@@ -291,7 +340,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: '#667eea',
+  color: '#fff',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -317,11 +366,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e1e1e1',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   dividerText: {
     marginHorizontal: 15,
-    color: '#666',
+    color: 'rgba(255,255,255,0.8)',
     fontSize: 14,
   },
   socialButton: {
@@ -329,16 +378,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#e1e1e1',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 12,
     paddingVertical: 12,
     marginBottom: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   socialButtonText: {
     marginLeft: 10,
     fontSize: 16,
-    color: '#333',
+    color: '#fff',
     fontWeight: '500',
   },
   switchContainer: {
@@ -348,11 +397,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   switchText: {
-    color: '#666',
+    color: '#fff',
     fontSize: 14,
   },
   switchButtonText: {
-    color: '#667eea',
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
   },

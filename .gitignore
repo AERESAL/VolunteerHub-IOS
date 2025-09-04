@@ -37,3 +37,7 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Local helper scripts (removed/disabled)
+scripts/cleanup.js
+scripts/reset-project.js
