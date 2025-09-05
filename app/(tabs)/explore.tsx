@@ -10,14 +10,64 @@ import {
   Linking,
   Modal,
   KeyboardAvoidingView,
+  ScrollView,
+  Image,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const sampleEvents = [
-  { id: 'e1', name: 'Community Cleanup', latitude: 37.7749, longitude: -122.4194 },
-  { id: 'e2', name: 'Food Drive', latitude: 37.7849, longitude: -122.4094 },
-  { id: 'e3', name: 'Park Restoration', latitude: 37.7649, longitude: -122.4294 },
+  {
+    id: 'e1',
+    name: 'Community Cleanup',
+    latitude: 37.7749,
+    longitude: -122.4194,
+    date: 'Sep 12, 2025',
+    time: '9:00 AM',
+    location: 'Market St & 5th',
+  },
+  {
+    id: 'e2',
+    name: 'Food Drive',
+    latitude: 37.7849,
+    longitude: -122.4094,
+    date: 'Sep 14, 2025',
+    time: '1:00 PM',
+    location: 'Union Square',
+  },
+  {
+    id: 'e3',
+    name: 'Park Restoration',
+    latitude: 37.7649,
+    longitude: -122.4294,
+    date: 'Sep 20, 2025',
+    time: '8:30 AM',
+    location: 'Golden Gate Park',
+  },
+];
+
+const samplePosts = [
+  {
+    id: 'p1',
+    user: 'Alex',
+    time: '2h ago',
+    text: 'Looking for volunteers to help at the Community Cleanup — anyone available?',
+    image: require('../../assets/images/react-logo.png'),
+  },
+  {
+    id: 'p2',
+    user: 'Jamie',
+    time: '5h ago',
+    text: 'Great turnout at the Food Drive today! Thanks to everyone who helped.',
+    image: require('../../assets/images/partial-react-logo.png'),
+  },
+  {
+    id: 'p3',
+    user: 'Riley',
+    time: '1d ago',
+    text: 'Does anyone have tools to lend for Park Restoration this weekend?',
+    image: require('../../assets/images/icon.png'),
+  },
 ];
 
 export default function ExploreScreen() {
@@ -25,17 +75,37 @@ export default function ExploreScreen() {
   const [query, setQuery] = useState('');
   const [events] = useState(sampleEvents);
   const mapRef = useRef<MapView | null>(null);
+  const [region, setRegion] = useState(() => ({
+    latitude: events[0].latitude,
+    longitude: events[0].longitude,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  }));
   const [joinedEventIds, setJoinedEventIds] = useState<string[]>([]);
   const [showMyEvents, setShowMyEvents] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [nearbyEvents, setNearbyEvents] = useState<typeof sampleEvents>([]);
+  const [posts] = useState(samplePosts);
+  const [mapInteractionEnabled, setMapInteractionEnabled] = useState(false);
 
   const filtered = useMemo(() => {
     if (!query) return events;
     const q = query.toLowerCase();
     return events.filter((e) => e.name.toLowerCase().includes(q));
   }, [query, events]);
+
+  // events visible inside the current map region
+  const visibleEvents = useMemo(() => {
+    if (!region) return [];
+    const latMin = region.latitude - region.latitudeDelta / 2;
+    const latMax = region.latitude + region.latitudeDelta / 2;
+    const lonMin = region.longitude - region.longitudeDelta / 2;
+    const lonMax = region.longitude + region.longitudeDelta / 2;
+    return filtered.filter(
+      (e) => e.latitude >= latMin && e.latitude <= latMax && e.longitude >= lonMin && e.longitude <= lonMax
+    );
+  }, [region, filtered]);
 
   const openInSystemMaps = async (latitude: number, longitude: number, label = '') => {
     try {
@@ -192,42 +262,94 @@ export default function ExploreScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-  <MapView
-        ref={mapRef}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        style={styles.map}
-        initialRegion={{
-          latitude: events[0].latitude,
-          longitude: events[0].longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-      >
-    {filtered.map((ev) => (
-          <Marker
-            key={ev.id}
-            coordinate={{ latitude: ev.latitude, longitude: ev.longitude }}
-            title={ev.name}
-      onPress={() => onMarkerPressLocal(ev)}
-            onCalloutPress={() => openInSystemMaps(ev.latitude, ev.longitude, ev.name)}
-          />
-        ))}
-      </MapView>
-
-      {/* Floating action buttons (bottom-right) */}
-      <View style={[styles.bottomRightContainer, { bottom: insets.bottom + 48 }]} pointerEvents="box-none">
-        <View style={styles.fabColumn}>
-          <TouchableOpacity style={styles.fab} onPress={() => setShowMyEvents(true)} accessibilityLabel="My Events">
-            <Text style={styles.fabIcon}>📋</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.fab} onPress={() => handleNearby()} accessibilityLabel="Events Near Me">
-            <Text style={styles.fabIcon}>📍</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.fab} onPress={() => setShowSearch(true)} accessibilityLabel="Search">
-            <Text style={styles.fabIcon}>🔎</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Explore</Text>
       </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }} scrollEnabled={!mapInteractionEnabled}>
+
+  {/* Community section removed from here and re-inserted under Events */}
+
+      <View style={styles.mapWrapper}>
+        <MapView
+          ref={mapRef}
+          provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+          style={styles.map}
+          initialRegion={region}
+          onRegionChangeComplete={(r) => setRegion(r)}
+        >
+          {filtered.map((ev) => (
+            <Marker
+              key={ev.id}
+              coordinate={{ latitude: ev.latitude, longitude: ev.longitude }}
+              title={ev.name}
+              onPress={() => onMarkerPressLocal(ev)}
+              onCalloutPress={() => openInSystemMaps(ev.latitude, ev.longitude, ev.name)}
+            />
+          ))}
+        </MapView>
+        <TouchableOpacity
+          style={styles.mapToggle}
+          onPress={() => setMapInteractionEnabled((v) => !v)}
+        >
+          <Text style={styles.mapToggleText}>{mapInteractionEnabled ? 'Done' : 'Pan Map'}</Text>
+        </TouchableOpacity>
+  </View>
+
+  {/* Events list - horizontal cards showing events visible on the map */}
+  <View style={styles.eventsSection}>
+        <Text style={styles.eventsHeader}>Events</Text>
+        {visibleEvents.length === 0 ? (
+          <Text style={[styles.emptyText, { color: '#fff' }]}>No events visible on the map.</Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.cardsContainer}
+          >
+            {visibleEvents.map((ev) => {
+              const joined = joinedEventIds.includes(ev.id);
+              return (
+                <View key={ev.id} style={styles.eventCard}>
+                  <Text style={styles.cardTitle}>{ev.name}</Text>
+                  <Text style={styles.cardInfo}>{ev.date} · {ev.time}</Text>
+                  <Text style={styles.cardLocation}>{ev.location}</Text>
+                  <TouchableOpacity
+                    onPress={() => (joined ? leaveEvent(ev.id) : joinEvent(ev.id))}
+                    style={styles.cardButton}
+                  >
+                    <Text style={styles.cardButtonText}>{joined ? 'Leave' : 'Join'}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </ScrollView>
+        )}
+  </View>
+
+  {/* Community section - posts from other users (placed under Events) */}
+  <View style={styles.communitySection}>
+        <Text style={styles.communityHeader}>Community</Text>
+        <ScrollView
+          style={styles.communityList}
+          contentContainerStyle={{ paddingBottom: 8 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {posts.map((p) => (
+            <View key={p.id} style={styles.postCard}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={styles.postUser}>{p.user}</Text>
+                <Text style={styles.postTime}>{p.time}</Text>
+              </View>
+              <Text style={styles.postText}>{p.text}</Text>
+              {p.image ? <Image source={p.image} style={styles.postImage} resizeMode="cover" /> : null}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+      </ScrollView>
+
+  {/* Floating action buttons removed as requested */}
     </View>
   );
 }
@@ -246,7 +368,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 16,
   },
-  map: { flex: 1 },
+  mapWrapper: {
+    height: '50%',
+    width: '100%',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    // ensure rounded corners and clipping
+    alignItems: 'center',
+  },
+  map: { height: '100%', width: '100%', borderRadius: 12, overflow: 'hidden' },
   controls: {
     position: 'absolute',
     bottom: 20,
@@ -272,8 +402,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+  fontSize: 50,
+  fontWeight: '700',
+  color: '#fff',
   },
   headerActions: {
     flexDirection: 'row',
@@ -387,5 +518,128 @@ const styles = StyleSheet.create({
   fabIcon: {
   color: '#fff',
   fontSize: 22,
+  },
+  eventsSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  eventsHeader: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+  color: '#fff',
+  },
+  eventItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  eventName: {
+  fontSize: 16,
+  color: '#fff',
+  },
+  cardsContainer: {
+    paddingVertical: 8,
+    paddingRight: 16,
+  },
+  eventCard: {
+    width: 220,
+    marginRight: 12,
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 12,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#333',
+    // elevation/shadow for depth
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  cardTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  cardInfo: {
+    color: '#ddd',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  cardLocation: {
+    color: '#ddd',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  cardButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  cardButtonText: {
+    color: '#111',
+    fontWeight: '700',
+  },
+  communitySection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  communityHeader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  communityList: {
+    maxHeight: 220,
+  },
+  postCard: {
+    backgroundColor: '#0d0d0d',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  postUser: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  postTime: {
+    color: '#bbb',
+    fontSize: 12,
+  },
+  postText: {
+    color: '#ddd',
+    marginTop: 8,
+    lineHeight: 18,
+  },
+  postImage: {
+    width: '100%',
+    height: 140,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  mapToggle: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  mapToggleText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });
